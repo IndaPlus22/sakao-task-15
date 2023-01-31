@@ -1,3 +1,5 @@
+use std::ops::*;
+
 #[derive(Debug)]
 struct Element {
     value: usize,
@@ -10,6 +12,14 @@ impl Element {
             value: val,
             parent: par,
         }
+    }
+}
+
+impl Add for Element {
+    type Output = usize;
+
+    fn add(self, other: Element) -> usize {
+        self.value + other.value
     }
 }
 
@@ -44,12 +54,10 @@ impl BetUnion {
         for i in 0..tmp.len() {
             if tmp[i] {
                 self.values[i].parent = new_parent;
-                // self.locations[i] = new_parent  ;
             }
         }
 
         // println!("res: {:?}", self.values);
-        // println!("loc: {:?}", self.locations);
     }
 
     // move num1 to set containing num2
@@ -60,28 +68,25 @@ impl BetUnion {
         }
         self.values[num1 - 1].parent = new_parent;
         // println!("new parent {}, num1: {}", new_parent, num1);
-        // self.locations[num1   - 1] = new_parent  ;
 
         // println!("res: {:?}", self.values);
-        // println!("loc: {:?}", self.locations);
     }
 
     // returns (size of set containing num, sum of numbers in set containing num)
     pub fn get(&self, num: usize) -> (usize, usize) {
         let parent = self.find(num);
-        let tmp: Vec<bool> = self.values.iter().map(|x| x.parent == parent).collect();
-        let mut val: usize = 0;
+        let tmp1: Vec<&Element> = self
+            .values
+            .iter()
+            .filter(|x| x.parent == parent)
+            .collect::<Vec<&Element>>();
+
         let mut sum: usize = 0;
 
-        // println!("debug:::get: {:?}", tmp);
-        for i in 0..tmp.len() {
-            if tmp[i] {
-                sum += i + 1;
-                val += 1;
-            }
+        for i in 0..tmp1.len() {
+            sum += tmp1[i].value;
         }
-
-        (val, sum)
+        (tmp1.len(), sum)
     }
 
     // returns which set number is in e.g. number 3 is in set number 2(sets are indexed from 0)
@@ -89,7 +94,6 @@ impl BetUnion {
         self.values[num - 1].parent
     }
 }
-
 
 // old version
 pub struct AlUnion {
