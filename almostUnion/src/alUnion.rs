@@ -1,4 +1,4 @@
-use std::ops::*;
+use std::{fmt, ops::*};
 
 #[derive(Debug, Clone, Copy)]
 struct Element {
@@ -26,8 +26,7 @@ impl Add for Element {
 pub struct BetUnion {
     // values: Vec<Element>,
     values: Vec<usize>,
-    parent: Vec<usize>
-    // locations: Vec<usize>
+    parent: Vec<usize>, // locations: Vec<usize>
 }
 
 impl BetUnion {
@@ -39,9 +38,7 @@ impl BetUnion {
         //     values.push(Element::new(i + 1, i));
         // }
 
-        BetUnion {
-            values, parent
-        }
+        BetUnion { values, parent }
     }
 
     // union the sets that contain num1 and num2
@@ -52,7 +49,7 @@ impl BetUnion {
             return;
         }
         let tmp: Vec<bool> = self.parent.iter().map(|x| x == &old_parent).collect();
-        
+
         for i in 0..tmp.len() {
             if tmp[i] {
                 self.parent[i] = new_parent;
@@ -86,7 +83,7 @@ impl BetUnion {
     }
 
     // returns (size of set containing num, sum of numbers in set containing num)
-    pub fn get(&self, num: usize) -> (usize, usize) {
+    pub fn get(&mut self, num: usize) -> (usize, usize) {
         let parent = self.find(num);
         let tmp1: Vec<bool> = self.parent.iter().map(|x| x == &parent).collect();
         // let tmp1: Vec<&Element> = self
@@ -112,23 +109,35 @@ impl BetUnion {
 
     // returns which set number is in e.g. number 3 is in set number 2(sets are indexed from 0)
     fn find(&self, num: usize) -> usize {
-        self.parent[num - 1]
+        let mut tmp = self.parent[num - 1];
+        if tmp != num - 1 {
+            tmp = self.find(tmp + 1);
+        }
+        tmp
     }
 }
 
 // ver 3
+#[derive(Debug)]
 pub struct ThUnion {
-    rank: Vec<usize>,
+    sizes: Vec<usize>,
+    sums: Vec<usize>,
     parent: Vec<usize>,
-    size: usize
+    size: usize,
 }
 
 impl ThUnion {
     pub fn new(size: usize) -> ThUnion {
-        let rank: Vec<usize> = vec![0; size];
+        let sizes: Vec<usize> = vec![1; size];
         let parent: Vec<usize> = (0..size).map(|v| v).collect();
+        let sums: Vec<usize> = (0..size).map(|v| v + 1).collect();
 
-        ThUnion { rank, parent, size }
+        ThUnion {
+            sizes,
+            sums,
+            parent,
+            size,
+        }
     }
 
     // union the sets that contain num1 and num2
@@ -139,17 +148,16 @@ impl ThUnion {
             return;
         }
 
-        if self.rank[set1] > self.rank[set2] {
-            self.parent[set1] = set2;
-        } else if self.rank[set1] < self.rank[set2] {
-            self.parent[set2] = set1;
-        } else {
-            self.parent[set2] = set1;
-            self.rank[set1] += 1;
-        }
-        
-        println!("parent: {:?}", self.parent);
-        println!("rank: {:?}", self.rank);
+        // println!("set1: {}, set2: {}", set1, set2);
+        self.sizes[set1] += self.sizes[set2];
+        self.sums[set1] += self.sums[set2];
+
+        self.parent[set2] = set1;
+
+        self.sizes[set2] = 0;
+        self.sums[set2] = 0;
+
+        // println!("merged: {:?}", self);
     }
 
     // move num1 to set containing num2
@@ -157,32 +165,63 @@ impl ThUnion {
         let set1 = self.find(num1);
         let set2 = self.find(num2);
         if set1 == set2 {
-            println!("skipped");
             return;
         }
 
-        self.parent[num1 - 1] = set2;
-        self.rank[set2] += 1;
+        // println!("set1: {}, set2: {}", set1, set2);
+        self.sizes[set1] -= 1;
+        self.sizes[set2] += 1;
 
-        println!("parent: {:?}", self.parent);
-        println!("rank: {:?}", self.rank);
+        self.sums[set1] -= num1;
+        self.sums[set2] += num1;
+
+        self.parent[num1 - 1] = set2;
+
+        if set1 == num1 - 1 {
+            let mut new_par: usize = 0;
+            let mut found = false;
+            for i in 0..self.size {
+                if self.parent[i] == set1 {
+                    if !found {
+                        found = true;
+                        new_par = i;
+                    }
+                    self.sums[i] = self.sums[set1];
+                    self.sizes[i] = self.sizes[set1];
+                    self.parent[i] = new_par;
+
+                    // println!("num1: {}, kid {}, set1: {}", num1, i, set1);
+                }
+            }
+        }
+
+        // println!("moved: {:?}", self);
     }
 
     // returns (size of set containing num, sum of numbers in set containing num)
     pub fn get(&mut self, num: usize) -> (usize, usize) {
         let parent = self.find(num);
-        
-        (1, 1)
-        // (self.sets[set].len(), self.sets[set].iter().sum())
+
+        (self.sizes[parent], self.sums[parent])
     }
 
-    // returns set of num by finding the root.
-    fn find(&mut self, num: usize) -> usize {
-        if self.parent[num -1] != num -1 {
-            self.parent[num -1] = self.find(num -1);
+    // returns parent by finding the root.
+    fn find(&self, num: usize) -> usize {
+        let mut tmp = self.parent[num - 1];
+        if tmp != num - 1 {
+            tmp = self.find(tmp + 1);
         }
+        tmp
+    }
+}
 
-        self.parent[num -1]
+impl fmt::Display for ThUnion {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "sizes: {:?}\nparent: {:?}\nsums: {:?}\nsize: {}\n",
+            self.sizes, self.sums, self.parent, self.size
+        )
     }
 }
 
