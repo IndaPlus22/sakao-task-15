@@ -24,20 +24,23 @@ impl Add for Element {
 }
 
 pub struct BetUnion {
-    values: Vec<Element>,
+    // values: Vec<Element>,
+    values: Vec<usize>,
+    parent: Vec<usize>
     // locations: Vec<usize>
 }
 
 impl BetUnion {
     pub fn new(size: usize) -> BetUnion {
-        let mut values: Vec<Element> = Vec::new();
-        // let locations: Vec<usize> = (0..size).map(|v| v).collect();
-        for i in 0..size {
-            values.push(Element::new(i + 1, i));
-        }
+        // let mut values: Vec<Element> = Vec::new();
+        let values: Vec<usize> = (0..size).map(|v| v + 1).collect();
+        let parent: Vec<usize> = (0..size).map(|v| v).collect();
+        // for i in 0..size {
+        //     values.push(Element::new(i + 1, i));
+        // }
 
         BetUnion {
-            values, /*locations */
+            values, parent
         }
     }
 
@@ -48,11 +51,11 @@ impl BetUnion {
         if old_parent == new_parent {
             return;
         }
-        let tmp: Vec<bool> = self.values.iter().map(|x| x.parent == old_parent).collect();
+        let tmp: Vec<bool> = self.parent.iter().map(|x| x == &old_parent).collect();
         
         for i in 0..tmp.len() {
             if tmp[i] {
-                self.values[i].parent = new_parent;
+                self.parent[i] = new_parent;
             }
         }
 
@@ -76,7 +79,7 @@ impl BetUnion {
         if new_parent == self.find(num1) {
             return;
         }
-        self.values[num1 - 1].parent = new_parent;
+        self.parent[num1 - 1] = new_parent;
         // println!("new parent {}, num1: {}", new_parent, num1);
 
         // println!("res: {:?}", self.values);
@@ -85,23 +88,31 @@ impl BetUnion {
     // returns (size of set containing num, sum of numbers in set containing num)
     pub fn get(&self, num: usize) -> (usize, usize) {
         let parent = self.find(num);
-        let tmp1: Vec<&Element> = self
-            .values
-            .iter()
-            .filter(|x| x.parent == parent)
-            .collect::<Vec<&Element>>();
+        let tmp1: Vec<bool> = self.parent.iter().map(|x| x == &parent).collect();
+        // let tmp1: Vec<&Element> = self
+        //     .values
+        //     .iter()
+        //     .filter(|x| x.parent == parent)
+        //     .collect::<Vec<&Element>>();
 
         let mut sum: usize = 0;
+        let mut vals: usize = 0;
 
         for i in 0..tmp1.len() {
-            sum += tmp1[i].value;
+            if tmp1[i] {
+                vals += 1;
+                sum += self.values[i];
+            }
         }
-        (tmp1.len(), sum)
+        // for i in 0..tmp1.len() {
+        //     sum += tmp1[i].value;
+        // }
+        (vals, sum)
     }
 
     // returns which set number is in e.g. number 3 is in set number 2(sets are indexed from 0)
     fn find(&self, num: usize) -> usize {
-        self.values[num - 1].parent
+        self.parent[num - 1]
     }
 }
 
