@@ -148,7 +148,7 @@ impl ThUnion {
             return;
         }
 
-        // println!("set1: {}, set2: {}", set1, set2);
+        // eprintln!("set1: {}, set2: {}", set1, set2);
         self.sizes[set1] += self.sizes[set2];
         self.sums[set1] += self.sums[set2];
 
@@ -157,7 +157,7 @@ impl ThUnion {
         self.sizes[set2] = 0;
         self.sums[set2] = 0;
 
-        // println!("merged: {:?}", self);
+        // eprintln!("merged: {:?}", self);
     }
 
     // move num1 to set containing num2
@@ -168,7 +168,7 @@ impl ThUnion {
             return;
         }
 
-        // println!("set1: {}, set2: {}", set1, set2);
+        // eprintln!("set1: {}, set2: {}", set1, set2);
         self.sizes[set1] -= 1;
         self.sizes[set2] += 1;
 
@@ -178,24 +178,31 @@ impl ThUnion {
         self.parent[num1 - 1] = set2;
 
         if set1 == num1 - 1 {
+            // if num1 is the parent of the set
             let mut new_par: usize = 0;
             let mut found = false;
             for i in 0..self.size {
                 if self.parent[i] == set1 {
+                    // find the first kid of the set
                     if !found {
+                        // if we havent found the new parent yet
                         found = true;
                         new_par = i;
+
+                        self.sums[i] = self.sums[set1];
+                        self.sizes[i] = self.sizes[set1];
                     }
-                    self.sums[i] = self.sums[set1];
-                    self.sizes[i] = self.sizes[set1];
+
                     self.parent[i] = new_par;
 
-                    // println!("num1: {}, kid {}, set1: {}", num1, i, set1);
+                    // eprintln!("num1: {}, kid {}, set1: {}", num1, i, set1);
                 }
             }
+            self.sizes[set1] = 0;
+            self.sums[set1] = 0;
         }
 
-        // println!("moved: {:?}", self);
+        // eprintln!("moved: {:?}", self);
     }
 
     // returns (size of set containing num, sum of numbers in set containing num)
