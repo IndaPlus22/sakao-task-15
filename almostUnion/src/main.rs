@@ -24,7 +24,7 @@ fn main() {
 
     input.clear();
     let mut union_thing: ThUnion = ThUnion::new(nm[0]);
-    // let mut union_thing: al_union = al_union::new(nm[0]);
+    // let mut union_thing: AlUnion = AlUnion::new(nm[0]);
     // let mut union_thing: BetUnion = BetUnion::new(nm[0]);
     for _ in 0..nm[1] {
         stdin().read_line(&mut input).unwrap();
