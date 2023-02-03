@@ -5,12 +5,22 @@ use std::io::{self, stdin};
 
 fn main() {
     let mut input = String::new();
-    stdin().read_line(&mut input).unwrap();
+    stdin().read_line(&mut input).expect("what");
+    while input.trim().is_empty() {
+        // println!("Waiting for input...");
+        input.clear();
+        stdin().read_line(&mut input).expect("what");
+    }
+    // input.clear();
+    // stdin().read_line(&mut input).unwrap();
+    // println!("input: {}", input);
     let mut nm: Vec<usize> = input
         .trim()
         .split(" ")
         .map(|x| x.parse().expect("Could not parse numbers!"))
         .collect();
+
+    // println!("nm: {:?}", nm);
 
     input.clear();
     let mut union_thing: ThUnion = ThUnion::new(nm[0]);

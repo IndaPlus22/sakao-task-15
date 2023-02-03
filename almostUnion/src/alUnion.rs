@@ -145,6 +145,7 @@ impl ThUnion {
         let set1 = self.find(num1);
         let set2 = self.find(num2);
         if set1 == set2 {
+            // eprintln!("no merge: {:?}", self);
             return;
         }
 
@@ -165,6 +166,7 @@ impl ThUnion {
         let set1 = self.find(num1);
         let set2 = self.find(num2);
         if set1 == set2 {
+            // eprintln!("no move: {:?}", self);
             return;
         }
 
